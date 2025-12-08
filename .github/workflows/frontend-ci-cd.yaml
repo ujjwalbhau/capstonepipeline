@@ -42,7 +42,7 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          context: ./frontend
+          context: ./fs-frontend
           push: true
           tags: ${{ steps.set-image.outputs.image }}
 
