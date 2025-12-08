@@ -51,7 +51,7 @@ jobs:
               tags: ${{ steps.set-image.outputs.image }}
 
         - name: Trivy scan image
-          uses: aquasecurity/trivy-action@v1
+          uses: aquasecurity/trivy-action@master
           with:
               image-ref: ${{ steps.set-image.outputs.image }}
               format: 'table'
