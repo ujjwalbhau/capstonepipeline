@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: demo
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-ppassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: backend
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: demo
+    ports:
+      - "4000:4000"
+    depends_on:
+      mysql:
+        condition: service_healthy    # waits for MySQL ready
+    networks:
+      - app-net
+
+  frontend:
+    build: ./fs-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://backend:4000   # IMPORTANT FIX
+    depends_on:
+      - backend
+    networks:
+      - app-net
+
+volumes:
+  dbdata:
+
+networks:
+  app-net:

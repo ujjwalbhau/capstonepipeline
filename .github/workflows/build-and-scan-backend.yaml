@@ -1,0 +1,63 @@
+name: Build-Scan-Push-Backend
+
+on:
+  push:
+    branches: 
+      - dev
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+
+  build_and_push:
+    name: Build, Scan & Push Backend Image
+    runs-on: ubuntu-latest
+
+    env:
+      ACR_NAME: ujjwal8087
+      IMAGE_NAME: backend
+      TAG: v1-${{ github.run_number }}
+
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Azure Login
+      - name: Azure CLI Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Login to ACR
+      - name: ACR Login
+        run: |
+          az acr login --name $ACR_NAME
+          echo "Login successful"
+
+      # Build Docker image
+      - name: Build Backend Image
+        run: |
+          docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${TAG} backend/
+
+      # Install Trivy
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install wget -y
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.50.0_Linux-64bit.deb
+
+      # Scan image with Trivy
+      - name: Trivy Scan
+        run: |
+          trivy image --exit-code 0 --severity HIGH,CRITICAL \
+            $ACR_NAME.azurecr.io/$IMAGE_NAME:${TAG}
+          echo "Trivy scan completed"
+
+      # Push image to ACR
+      - name: Push Image to ACR
+        run: |
+          docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${TAG}
+
