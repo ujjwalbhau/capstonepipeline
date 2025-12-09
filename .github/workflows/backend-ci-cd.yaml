@@ -79,14 +79,35 @@ jobs:
         run: |
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/backend-svc.yaml
+          # Verify namespace exists
+          NAMESPACE="${{ secrets.K8S_NAMESPACE }}"
+          if [ -z "$NAMESPACE" ]; then
+            echo "ERROR: K8S_NAMESPACE secret is not set!"
+            exit 1
+          fi
+          echo "Using namespace: $NAMESPACE"
+          kubectl get namespace "$NAMESPACE" || echo "Namespace may not be fully ready yet"
 
       - name: Deploy updated image (and create secret if not present)
         env:
           DB_CONN_STRING: ${{ secrets.DB_CONN_STRING }}
+          K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
         run: |
+          if [ -z "$K8S_NAMESPACE" ]; then
+            echo "ERROR: K8S_NAMESPACE secret is not set!"
+            exit 1
+          fi
+          
+          echo "Using namespace: $K8S_NAMESPACE"
+          
+          # Ensure namespace exists with a wait
+          kubectl get namespace "$K8S_NAMESPACE" || (echo "Namespace not found, waiting..." && sleep 5 && kubectl get namespace "$K8S_NAMESPACE")
+          
           # create secret if it doesn't exist (idempotent)
-          kubectl -n ${{ secrets.K8S_NAMESPACE }} create secret generic backend-secrets --from-literal=db_conn="$DB_CONN_STRING" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$K8S_NAMESPACE" create secret generic backend-secrets --from-literal=db_conn="$DB_CONN_STRING" --dry-run=client -o yaml | kubectl apply -f -
+          
           IMAGE="${{ needs.build-and-push.outputs.image }}"
+          echo "Deploying image: $IMAGE"
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-deploy.yaml > k8s/backend-deploy.tmp.yaml
           kubectl apply -f k8s/backend-deploy.tmp.yaml
 
