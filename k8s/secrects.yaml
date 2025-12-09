@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: backend-secrets
-  namespace: demo
+  namespace: capstone-project
 type: Opaque
 stringData:
   db_conn: "mysql://user:pass@mysql-host:3306/dbname"
