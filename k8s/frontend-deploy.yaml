@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: app
   namespace: capstone-project
 spec:
   replicas: 3
@@ -12,11 +12,11 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: frontend
+      app: app
   template:
     metadata:
       labels:
-        app: frontend
+        app: app
     spec:
       containers:
         - name: frontend
