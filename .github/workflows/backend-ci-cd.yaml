@@ -152,30 +152,5 @@ jobs:
           kubectl apply -f k8s/backend-deploy.tmp.yaml
       #    rm -f k8s/backend-deploy.tmp.yaml image.txt
 
-      - name: Trigger rolling update and wait (automated rollback on failure)
-        run: |
-          K8S_NS="capstone-project"
-          IMAGE="${{ needs.build-and-push.outputs.image }}"
-          if [ -f image.txt ]; then
-            IMAGE="$(cat image.txt)"
-          fi
-          echo "Setting deployment image to: $IMAGE"
-          kubectl -n $K8S_NS set image deployment/backend backend=${IMAGE}
-          if ! kubectl -n $K8S_NS rollout status deployment/backend --timeout=600s; then
-            echo "Rollout failed; collecting diagnostics..."
-            echo "--- Deployment describe ---"
-            kubectl -n $K8S_NS describe deployment backend || true
-            echo "--- ReplicaSets ---"
-            kubectl -n $K8S_NS get rs -l app=backend -o wide || true
-            echo "--- Pods ---"
-            kubectl -n $K8S_NS get pods -l app=backend -o wide || true
-            for p in $(kubectl -n $K8S_NS get pods -l app=backend -o name || echo ""); do
-              echo "--- Describe $p ---"
-              kubectl -n $K8S_NS describe $p || true
-              echo "--- Logs for $p (container: backend) ---"
-              kubectl -n $K8S_NS logs $p -c backend --tail=200 || true
-            done
-            echo "Rolling back deployment/backend"
-            kubectl -n $K8S_NS rollout undo deployment/backend || true
-            exit 1
-          fi
+      
+    

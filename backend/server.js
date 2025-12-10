@@ -12,6 +12,9 @@ app.use(cors({
 
 app.use(express.json());
 
+// health endpoint for Kubernetes readiness/liveness probes
+app.get('/health', (req, res) => res.sendStatus(200));
+
 // sample submit route
 app.post('/submit', async (req, res) => {
   try {
@@ -38,5 +41,5 @@ app.get("/submissions", async (req, res) => {
   }
 });
 
-
-app.listen(4000, () => console.log("Backend running on port 4000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
