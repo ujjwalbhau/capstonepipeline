@@ -132,11 +132,11 @@ jobs:
           echo "Generated manifest:"
           cat k8s/frontend-deploy.tmp.yaml
           kubectl apply -f k8s/frontend-deploy.tmp.yaml
-          rm -f k8s/frontend-deploy.tmp.yaml image.txt
+ #         rm -f k8s/frontend-deploy.tmp.yaml image.txt
 
       - name: Trigger rolling update and wait (automated rollback on failure)
         run: |
-          kubectl -n ${{ secrets.K8S_NAMESPACE }} set image deployment/frontend frontend=${{ needs.build-and-push.outputs.image }}
+          kubectl -n ${{ secrets.K8S_NAMESPACE }} set image deployment/frontend frontend= cat image.txt
           if ! kubectl -n ${{ secrets.K8S_NAMESPACE }} rollout status deployment/frontend --timeout=180s; then
             echo "Rollout failed; rolling back"
             kubectl -n ${{ secrets.K8S_NAMESPACE }} rollout undo deployment/frontend
