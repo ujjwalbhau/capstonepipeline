@@ -161,7 +161,7 @@ jobs:
           fi
           echo "Setting deployment image to: $IMAGE"
           kubectl -n $K8S_NS set image deployment/backend backend=${IMAGE}
-          if ! kubectl -n $K8S_NS rollout status deployment/backend --timeout=180s; then
+          if ! kubectl -n $K8S_NS rollout status deployment/backend --timeout=5min; then
             echo "Rollout failed; rolling back"
             kubectl -n $K8S_NS rollout undo deployment/backend
             exit 1

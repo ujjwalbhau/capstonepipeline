@@ -132,7 +132,8 @@ jobs:
           echo "Generated manifest:"
           cat k8s/frontend-deploy.tmp.yaml
           kubectl apply -f k8s/frontend-deploy.tmp.yaml
-          rm -f k8s/frontend-deploy.tmp.yaml image.txt
+          # keep image.txt so subsequent steps (rolling update) can read the resolved image
+          rm -f k8s/frontend-deploy.tmp.yaml
 
       - name: Trigger rolling update and wait (automated rollback on failure)
         run: |
