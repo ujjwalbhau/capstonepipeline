@@ -36,6 +36,9 @@ jobs:
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
           echo "Final IMAGE: ${IMAGE}"
 
+      - name: Debug show set-image outputs
+        run: echo "DEBUG image ${{ steps.set-image.outputs.image }}" && echo "DEBUG tag ${{ steps.set-image.outputs.tag }}"
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -73,6 +76,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Debug show build-and-push job outputs
+        run: |
+          echo "DEBUG: needs.build-and-push.outputs.image='${{ needs.build-and-push.outputs.image }}'"
+          echo "DEBUG: needs.build-and-push.outputs.tag='${{ needs.build-and-push.outputs.tag }}'"
 
       - name: Login to Azure
         uses: azure/login@v1
