@@ -8,7 +8,7 @@ on:
       - dev2
 
 env:
-  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+  ACR_LOGIN_SERVER: ujjwal8087.azurecr.io
   K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
 
 jobs:
@@ -25,12 +25,12 @@ jobs:
         id: set-image
         run: |
           ACR_LOGIN_SERVER="${{ secrets.ACR_LOGIN_SERVER }}"
-          echo "ACR_LOGIN_SERVER: ${ACR_LOGIN_SERVER}"
+          echo "ACR_LOGIN_SERVER: ujjwal8087.azurecr.io"
           
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
           TAG="${BRANCH}-${SHORT_SHA}"
-          IMAGE="${ACR_LOGIN_SERVER}/frontend:${TAG}"
+          IMAGE="ujjwal8087.azurecr.io/frontend:${TAG}"
           
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
@@ -42,7 +42,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: ACR login
-        run: az acr login --name ${{ secrets.ACR_NAME }}
+        run: az acr login --name ujjwal8087
 
       - name: Build and push image
         uses: docker/build-push-action@v4

@@ -23,13 +23,24 @@ jobs:
 
       - name: Set image tag
         id: set-image
+        env:
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
         run: |
+          ACR_LOGIN_SERVER="${ACR_LOGIN_SERVER}"
+          echo "ACR_LOGIN_SERVER: ${ACR_LOGIN_SERVER}"
+          if [ -z "${ACR_LOGIN_SERVER}" ]; then
+            echo "ERROR: ACR_LOGIN_SERVER secret is not configured."
+            echo "Set repository secret 'ACR_LOGIN_SERVER' (e.g., myregistry.azurecr.io)"
+            exit 1
+          fi
+
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
           TAG="${BRANCH}-${SHORT_SHA}"
-          IMAGE="${{ env.ACR_LOGIN_SERVER }}/backend:${TAG}"
+          IMAGE="${ACR_LOGIN_SERVER}/backend:${TAG}"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "IMAGE set to: ${IMAGE}"
 
       - name: Login to Azure
         uses: azure/login@v1
