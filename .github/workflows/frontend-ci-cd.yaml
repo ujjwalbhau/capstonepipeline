@@ -145,8 +145,21 @@ jobs:
           echo "Setting deployment image to: $IMAGE"
           # deployment name in k8s/frontend-deploy.yaml is 'app' (container name 'frontend')
           kubectl -n $K8S_NS set image deployment/app frontend=${IMAGE}
-          if ! kubectl -n $K8S_NS rollout status deployment/app --timeout=180s; then
-            echo "Rollout failed; rolling back"
-            kubectl -n $K8S_NS rollout undo deployment/app
+          if ! kubectl -n $K8S_NS rollout status deployment/app --timeout=600s; then
+            echo "Rollout failed; collecting diagnostics..."
+            echo "--- Deployment describe ---"
+            kubectl -n $K8S_NS describe deployment app || true
+            echo "--- ReplicaSets ---"
+            kubectl -n $K8S_NS get rs -l app=app -o wide || true
+            echo "--- Pods ---"
+            kubectl -n $K8S_NS get pods -l app=app -o wide || true
+            for p in $(kubectl -n $K8S_NS get pods -l app=app -o name || echo ""); do
+              echo "--- Describe $p ---"
+              kubectl -n $K8S_NS describe $p || true
+              echo "--- Logs for $p (container: frontend) ---"
+              kubectl -n $K8S_NS logs $p -c frontend --tail=200 || true
+            done
+            echo "Rolling back deployment/app"
+            kubectl -n $K8S_NS rollout undo deployment/app || true
             exit 1
           fi
