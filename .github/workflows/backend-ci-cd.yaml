@@ -77,45 +77,50 @@ jobs:
 
       - name: Apply namespace & service
         run: |
+          echo "Creating namespace..."
           kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/backend-svc.yaml
-          # Verify namespace exists
-          NAMESPACE="${{ secrets.K8S_NAMESPACE }}"
-          if [ -z "$NAMESPACE" ]; then
-            echo "ERROR: K8S_NAMESPACE secret is not set!"
+          
+          # Verify namespace was created
+          NS_NAME=$(kubectl get namespace capstone-project -o jsonpath='{.metadata.name}' 2>/dev/null || echo "")
+          if [ -z "$NS_NAME" ]; then
+            echo "ERROR: Namespace 'capstone-project' was not created!"
             exit 1
           fi
-          echo "Using namespace: $NAMESPACE"
-          kubectl get namespace "$NAMESPACE" || echo "Namespace may not be fully ready yet"
+          echo "Namespace confirmed: $NS_NAME"
+          
+          echo "Creating service..."
+          kubectl apply -f k8s/backend-svc.yaml
 
       - name: Deploy updated image (and create secret if not present)
-        env:
-          DB_CONN_STRING: ${{ secrets.DB_CONN_STRING }}
-          K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
         run: |
-          if [ -z "$K8S_NAMESPACE" ]; then
-            echo "ERROR: K8S_NAMESPACE secret is not set!"
-            exit 1
-          fi
-          
-          echo "Using namespace: $K8S_NAMESPACE"
-          
-          # Ensure namespace exists with a wait
-          kubectl get namespace "$K8S_NAMESPACE" || (echo "Namespace not found, waiting..." && sleep 5 && kubectl get namespace "$K8S_NAMESPACE")
+          K8S_NS="capstone-project"
           
           # create secret if it doesn't exist (idempotent)
-          kubectl -n "$K8S_NAMESPACE" create secret generic backend-secrets --from-literal=db_conn="$DB_CONN_STRING" --dry-run=client -o yaml | kubectl apply -f -
+          if [ -n "${{ secrets.DB_CONN_STRING }}" ]; then
+            kubectl -n $K8S_NS create secret generic backend-secrets --from-literal=db_conn="${{ secrets.DB_CONN_STRING }}" --dry-run=client -o yaml | kubectl apply -f -
+            echo "Secret configured"
+          else
+            echo "WARNING: DB_CONN_STRING secret not set, skipping secret creation"
+          fi
           
           IMAGE="${{ needs.build-and-push.outputs.image }}"
           echo "Deploying image: $IMAGE"
+          
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: IMAGE is empty!"
+            exit 1
+          fi
+          
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-deploy.yaml > k8s/backend-deploy.tmp.yaml
           kubectl apply -f k8s/backend-deploy.tmp.yaml
+          rm k8s/backend-deploy.tmp.yaml
 
       - name: Trigger rolling update and wait (automated rollback on failure)
         run: |
-          kubectl -n ${{ secrets.K8S_NAMESPACE }} set image deployment/backend backend=${{ needs.build-and-push.outputs.image }}
-          if ! kubectl -n ${{ secrets.K8S_NAMESPACE }} rollout status deployment/backend --timeout=180s; then
+          K8S_NS="capstone-project"
+          kubectl -n $K8S_NS set image deployment/backend backend=${{ needs.build-and-push.outputs.image }}
+          if ! kubectl -n $K8S_NS rollout status deployment/backend --timeout=180s; then
             echo "Rollout failed; rolling back"
-            kubectl -n ${{ secrets.K8S_NAMESPACE }} rollout undo deployment/backend
+            kubectl -n $K8S_NS rollout undo deployment/backend
             exit 1
           fi
