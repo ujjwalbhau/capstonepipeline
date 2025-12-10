@@ -72,6 +72,16 @@ jobs:
           vuln-type: 'os,library'
           ignore-unfixed: true
 
+      - name: Persist image name to artifact
+        run: |
+          echo "${{ steps.set-image.outputs.image }}" > image.txt
+          cat image.txt
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-image
+          path: image.txt
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -79,6 +89,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download build image artifact (if present)
+        uses: actions/download-artifact@v4
+        with:
+          name: build-image
+          path: .
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -110,7 +126,21 @@ jobs:
       - name: Deploy updated image (and create secret if not present)
         run: |
           K8S_NS="capstone-project"
-          
+          # download artifact if present (artifact will contain image.txt)
+          if command -v gh >/dev/null 2>&1; then
+            echo "gh CLI present"
+          fi
+          # attempt to use the job output first
+          IMAGE="${{ needs.build-and-push.outputs.image }}"
+          # if empty, try artifact (downloaded via actions/download-artifact step)
+          if [ -f image.txt ]; then
+            IMAGE="$(cat image.txt)"
+            echo "Image loaded from artifact: $IMAGE"
+          fi
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: IMAGE is empty!"
+            exit 1
+          fi
           # create secret if it doesn't exist (idempotent)
           if [ -n "${{ secrets.DB_CONN_STRING }}" ]; then
             kubectl -n $K8S_NS create secret generic backend-secrets --from-literal=db_conn="${{ secrets.DB_CONN_STRING }}" --dry-run=client -o yaml | kubectl apply -f -
@@ -118,18 +148,9 @@ jobs:
           else
             echo "WARNING: DB_CONN_STRING secret not set, skipping secret creation"
           fi
-          
-          IMAGE="${{ needs.build-and-push.outputs.image }}"
-          echo "Deploying image: $IMAGE"
-          
-          if [ -z "$IMAGE" ]; then
-            echo "ERROR: IMAGE is empty!"
-            exit 1
-          fi
-          
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-deploy.yaml > k8s/backend-deploy.tmp.yaml
           kubectl apply -f k8s/backend-deploy.tmp.yaml
-          rm k8s/backend-deploy.tmp.yaml
+          rm -f k8s/backend-deploy.tmp.yaml image.txt
 
       - name: Trigger rolling update and wait (automated rollback on failure)
         run: |
