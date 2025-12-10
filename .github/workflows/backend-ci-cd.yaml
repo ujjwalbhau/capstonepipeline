@@ -155,7 +155,12 @@ jobs:
       - name: Trigger rolling update and wait (automated rollback on failure)
         run: |
           K8S_NS="capstone-project"
-          kubectl -n $K8S_NS set image deployment/backend backend= cat image.txt
+          IMAGE="${{ needs.build-and-push.outputs.image }}"
+          if [ -f image.txt ]; then
+            IMAGE="$(cat image.txt)"
+          fi
+          echo "Setting deployment image to: $IMAGE"
+          kubectl -n $K8S_NS set image deployment/backend backend=${IMAGE}
           if ! kubectl -n $K8S_NS rollout status deployment/backend --timeout=180s; then
             echo "Rollout failed; rolling back"
             kubectl -n $K8S_NS rollout undo deployment/backend
