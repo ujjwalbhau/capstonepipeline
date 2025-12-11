@@ -133,7 +133,7 @@ jobs:
           cat k8s/frontend-deploy.tmp.yaml
           kubectl apply -f k8s/frontend-deploy.tmp.yaml
           # keep image.txt so subsequent steps (rolling update) can read the resolved image
-          rm -f k8s/frontend-deploy.tmp.yaml
+   #       rm -f k8s/frontend-deploy.tmp.yaml
 
       - name: Roll frontend deployment to pick up new image
         run: |
@@ -143,5 +143,5 @@ jobs:
             echo "Image loaded from artifact: $IMAGE"
           fi
           echo "Rolling frontend deployment with image: $IMAGE"
-          kubectl -n ${{ env.K8S_NAMESPACE }} set image deployment/frontend frontend=$IMAGE
+          kubectl -n ${{ env.K8S_NAMESPACE }} set image deployment/app frontend=$IMAGE
      
