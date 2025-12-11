@@ -7,7 +7,7 @@ export default function App() {
 
   
 useEffect(() => {
-  fetch("http://localhost:4000/submissions")
+  fetch("http://backend:3000/submissions")
     .then((res) => res.json())
     .then((data) => {
       if (Array.isArray(data)) {
