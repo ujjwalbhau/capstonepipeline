@@ -22,17 +22,17 @@ spec:
         - name: frontend
           image: REPLACE_WITH_IMAGE
           ports:
-            - containerPort: 80
+            - containerPort: 3000
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10
