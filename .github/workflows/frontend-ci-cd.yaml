@@ -4,11 +4,10 @@ on:
   push:
     branches:
       - main
-      - dev
-      - dev2
+     
 
 env:
-  ACR_LOGIN_SERVER: ujjwal8087.azurecr.io
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
   K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
 
 jobs:
@@ -45,7 +44,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: ACR login
-        run: az acr login --name ujjwal8087
+        run: az acr login --name ${{ secrets.ACR_NAME }}
 
       - name: Build and push image
         uses: docker/build-push-action@v4
