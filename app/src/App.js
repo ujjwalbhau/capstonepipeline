@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 export default function App() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [subs, setSubs] = useState([]);
-  const api = process.env.REACT_APP_API_URL || 'http://backend:3000';
+  const api = process.env.REACT_APP_BACKEND_URL || 'http://backend:3000';
 
   
 useEffect(() => {

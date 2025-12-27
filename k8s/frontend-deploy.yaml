@@ -23,6 +23,9 @@ spec:
           image: REPLACE_WITH_IMAGE
           ports:
             - containerPort: 3000
+          env:
+          - name: REACT_APP_BACKEND_URL
+            value: "http://backend:3000"  
           readinessProbe:
             httpGet:
               path: /health
@@ -36,3 +39,4 @@ spec:
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10
+        
