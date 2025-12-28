@@ -156,7 +156,7 @@ jobs:
           -p "{\"spec\":{\"selector\":{\"app\":\"myapp\",\"version\":\"$NEXT\"}}}"
           echo "Deployment failed — traffic never switched"
           kubectl -n $K8S_NAMESPACE delete deployment app-$NEXT
-          kubectl -n $K8S_NAMESPACE patch svc app-service \
+          kubectl -n $K8S_NAMESPACE patch svc frontend-lb \
            -p "{\"spec\":{\"selector\":{\"app\":\"myapp\",\"version\":\"$CURRENT\"}}}"
 
 

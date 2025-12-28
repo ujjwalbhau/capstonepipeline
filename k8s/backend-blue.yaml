@@ -20,6 +20,8 @@ spec:
         app: backend
         color: blue
     spec:
+      imagePullSecrets:
+        - name: acr-secret    
       containers:
         - name: backend
           image: REPLACE_WITH_IMAGE
@@ -36,7 +38,7 @@ spec:
             value: "password123"
           - name: DB_NAME
             value: "appdb"
-
+    
           readinessProbe:
             httpGet:
               path: /health
