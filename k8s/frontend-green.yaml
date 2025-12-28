@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-blue
+  name: app-green
   namespace: capstone-project
 spec:
   replicas: 3
@@ -13,12 +13,12 @@ spec:
   selector:
     matchLabels:
       app: app
-      version: blue
+      version: green
   template:
     metadata:
       labels:
         app: app
-        version: blue
+        version: green
     spec:
       containers:
         - name: frontend

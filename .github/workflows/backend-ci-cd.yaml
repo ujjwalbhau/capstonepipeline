@@ -152,12 +152,21 @@ jobs:
 
       - name: Roll backend deployment to pick up new image
         run: |
-          IMAGE="${{ needs.build-and-push.outputs.image }}"
-          if [ -f image.txt ]; then
-            IMAGE="$(cat image.txt)"
-            echo "Image loaded from artifact: $IMAGE"
+          CURRENT=$(kubectl -n capstone-project get svc backend -o jsonpath='{.spec.selector.version}')
+          if [ "$CURRENT" = "blue" ]; then
+            NEXT="green"
+          else
+            NEXT="blue"
           fi
-          echo "Rolling backend deployment with image: $IMAGE"
-          kubectl -n ${{ env.K8S_NAMESPACE }} set image deployment/backend backend=$IMAGE
-      
-    
+          echo "Deploying $NEXT backend deployment"
+          echo "next=$NEXT" >> $GITHUB_OUTPUT
+
+          sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-$NEXT.yaml > /tmp/backend.yaml
+          kubectl apply -f /tmp/backend.yaml
+          kubectl -n capstone-project rollout status deployment/backend-$NEXT --timeout=120s
+          kubectl -n capstone-project patch svc backend \
+          -p "{\"spec\":{\"selector\":{\"app\":\"backend\",\"color\":\"$NEXT\"}}}"
+          echo "Deployment failed — traffic never switched"
+          kubectl -n capstone-project delete deployment backend-$NEXT
+          kubectl -n capstone-project patch svc backend \
+           -p "{\"spec\":{\"selector\":{\"app\":\"backend\",\"color\":\"$CURRENT\"}}}"

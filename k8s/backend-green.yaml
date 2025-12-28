@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-blue
+  name: backend-green
   namespace: capstone-project
 spec:
-  replicas: 3
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -12,22 +12,31 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: app
-      version: blue
+      app: backend
+      color: green
   template:
     metadata:
       labels:
-        app: app
-        version: blue
+        app: backend
+        color: green
     spec:
       containers:
-        - name: frontend
+        - name: backend
           image: REPLACE_WITH_IMAGE
           ports:
             - containerPort: 3000
           env:
-          - name: REACT_APP_BACKEND_URL
-            value: "http://backend:3000"  
+          - name: DB_HOST
+            value: "mysql"
+          - name: DB_PORT
+            value: "3306"
+          - name: DB_USER
+            value: "appuser"
+          - name: DB_PASSWORD
+            value: "password123"
+          - name: DB_NAME
+            value: "appdb"
+
           readinessProbe:
             httpGet:
               path: /health
@@ -41,4 +50,3 @@ spec:
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10
-        
