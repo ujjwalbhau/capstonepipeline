@@ -149,7 +149,7 @@ jobs:
           IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/frontend:${GITHUB_SHA}"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-          sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/app-$NEXT.yaml > /tmp/app.yaml
+          sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/app.yaml
           kubectl apply -f /tmp/app.yaml
           kubectl -n $K8S_NAMESPACE rollout status deployment/app-$NEXT --timeout=120s
           kubectl -n $K8S_NAMESPACE patch svc frontend-lb \
