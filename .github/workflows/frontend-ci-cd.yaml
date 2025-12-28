@@ -146,8 +146,18 @@ jobs:
           echo "Deploying $NEXT"
           echo "next=$NEXT" >> $GITHUB_OUTPUT
 
-          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/frontend:${GITHUB_SHA}"
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+           IMAGE="${{ needs.build-and-push.outputs.image }}"
+          if [ -f image.txt ]; then
+            IMAGE="$(cat image.txt)"
+            echo "Image loaded from artifact: $IMAGE"
+          fi
+          echo "Deploying image: $IMAGE"
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: IMAGE variable is empty!"
+            exit 1
+          fi
+
+
 
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/app.yaml
           kubectl apply -f /tmp/app.yaml
