@@ -160,6 +160,9 @@ jobs:
           fi
           echo "Deploying $NEXT backend deployment"
           echo "next=$NEXT" >> $GITHUB_OUTPUT
+          
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/backend:${GITHUB_SHA}"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-$NEXT.yaml > /tmp/backend.yaml
           kubectl apply -f /tmp/backend.yaml

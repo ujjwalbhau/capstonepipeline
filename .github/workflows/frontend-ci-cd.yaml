@@ -146,6 +146,9 @@ jobs:
           echo "Deploying $NEXT"
           echo "next=$NEXT" >> $GITHUB_OUTPUT
 
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/frontend:${GITHUB_SHA}"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/app-$NEXT.yaml > /tmp/app.yaml
           kubectl apply -f /tmp/app.yaml
           kubectl -n $K8S_NAMESPACE rollout status deployment/app-$NEXT --timeout=120s
