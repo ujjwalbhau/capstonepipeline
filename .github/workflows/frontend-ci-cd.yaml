@@ -136,7 +136,7 @@ jobs:
 
       - name: Roll frontend deployment to pick up new image
         run: |
-          CURRENT=$(kubectl -n ${{ secrets.K8S_NAMESPACE }} get svc app -o jsonpath='{.spec.selector.version}')
+          CURRENT=$(kubectl -n ${{ secrets.K8S_NAMESPACE }} get svc frontend-lb -o jsonpath='{.spec.selector.version}')
           if [ "$CURRENT" = "blue" ]; then
             NEXT="green"
           else
@@ -152,7 +152,7 @@ jobs:
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/app-$NEXT.yaml > /tmp/app.yaml
           kubectl apply -f /tmp/app.yaml
           kubectl -n $K8S_NAMESPACE rollout status deployment/app-$NEXT --timeout=120s
-          kubectl -n $K8S_NAMESPACE patch svc app-service \
+          kubectl -n $K8S_NAMESPACE patch svc frontend-lb \
           -p "{\"spec\":{\"selector\":{\"app\":\"myapp\",\"version\":\"$NEXT\"}}}"
           echo "Deployment failed — traffic never switched"
           kubectl -n $K8S_NAMESPACE delete deployment app-$NEXT

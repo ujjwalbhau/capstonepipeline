@@ -161,8 +161,20 @@ jobs:
           echo "Deploying $NEXT backend deployment"
           echo "next=$NEXT" >> $GITHUB_OUTPUT
           
-          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/backend:${GITHUB_SHA}"
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+           if command -v gh >/dev/null 2>&1; then
+            echo "gh CLI present"
+          fi
+          # attempt to use the job output first
+          IMAGE="${{ needs.build-and-push.outputs.image }}"
+          # if empty, try artifact (downloaded via actions/download-artifact step)
+          if [ -f image.txt ]; then
+            IMAGE="$(cat image.txt)"
+            echo "Image loaded from artifact: $IMAGE"
+          fi
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: IMAGE is empty!"
+            exit 1
+          fi
 
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-$NEXT.yaml > /tmp/backend.yaml
           kubectl apply -f /tmp/backend.yaml
