@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         app: backend
-        version:: green
+        version: green
     spec:
       containers:
         - name: backend
