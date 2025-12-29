@@ -19,7 +19,7 @@ app.get('/health', (req, res) => res.sendStatus(200));
 app.post('/submit', async (req, res) => {
   try {
     const pool = await getPool();
-    const { name, email } = req.body;
+    const { name, email, message } = req.body;
 
     await pool.query('INSERT INTO users (name, email, message) VALUES (?, ?, ?)', [name, email, message]);
 
