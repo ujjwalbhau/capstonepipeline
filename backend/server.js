@@ -21,7 +21,7 @@ app.post('/submit', async (req, res) => {
     const pool = await getPool();
     const { name, email } = req.body;
 
-    await pool.query('INSERT INTO users (name, email) VALUES (?, ?)', [name, email]);
+    await pool.query('INSERT INTO users (name, email, message) VALUES (?, ?, ?)', [name, email, message]);
 
     res.json({ message: "Data stored successfully!" });
   } catch (err) {

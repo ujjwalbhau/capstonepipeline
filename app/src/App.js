@@ -104,7 +104,7 @@ export default function App() {
 
       <h2>Recent submissions</h2>
       <ul>
-        {subs.map(s => <li key={s.id}>{s.name} ({s.email})</li>)}
+        {subs.map(s => <li key={s.id}>{s.name} ({s.email}) ({s.message})</li>)}
       </ul>
     </div>
   );
