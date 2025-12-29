@@ -13,12 +13,12 @@ spec:
   selector:
     matchLabels:
       app: backend
-      color: blue
+      version: blue
   template:
     metadata:
       labels:
         app: backend
-        color: blue
+        version: blue
     spec:
       imagePullSecrets:
         - name: acr-secret    

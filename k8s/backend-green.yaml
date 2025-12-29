@@ -13,12 +13,12 @@ spec:
   selector:
     matchLabels:
       app: backend
-      color: green
+      version: green
   template:
     metadata:
       labels:
         app: backend
-        color: green
+        version:: green
     spec:
       containers:
         - name: backend
