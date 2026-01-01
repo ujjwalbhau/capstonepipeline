@@ -21,12 +21,20 @@ jobs:
     - name: Log in to Azure Container Registry
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+    - name: ACR Login
+      run: az acr login --name ujjwal8087    
+
+
+        
 
     - name: Build & Push Docker Image
       run: |
         IMAGE_TAG=${GITHUB_SHA::7}
-        IMAGE="$REGISTRY/$IMAGE_NAME:main-$IMAGE_TAG"
+        IMAGE="ujjwal8087.azurecr.io/backend:main-$IMAGE_TAG"
 
         docker build -f ./backend/Dockerfile -t $IMAGE backend
         docker push $IMAGE
