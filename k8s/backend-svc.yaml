@@ -7,7 +7,7 @@ spec:
   type: ClusterIP
   selector:
     app: backend
-    version: green
+    version: blue
   ports:
   - port: 3000
     targetPort: 3000
