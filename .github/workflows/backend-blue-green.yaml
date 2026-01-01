@@ -3,7 +3,7 @@ name: Backend Blue-Green Deploy
 on:
   push:
     branches:
-      - main
+      - dev
 
 env:
   REGISTRY: "${{ secrets.ACR_LOGIN_SERVER }}"
