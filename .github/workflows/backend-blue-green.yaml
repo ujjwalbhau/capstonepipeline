@@ -1,0 +1,60 @@
+name: Backend Blue-Green Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: "${{ secrets.ACR_LOGIN_SERVER }}"
+  IMAGE_NAME: backend
+  NAMESPACE: capstone-project
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Azure Container Registry
+      run: |
+        echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
+          -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
+    - name: Build & Push Docker Image
+      run: |
+        IMAGE_TAG=${GITHUB_SHA::7}
+        IMAGE="$REGISTRY/$IMAGE_NAME:main-$IMAGE_TAG"
+
+        docker build -t $IMAGE .
+        docker push $IMAGE
+
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    # 🚀 Deploy GREEN (inject image)
+    - name: Deploy GREEN backend
+      run: |
+        kubectl -n $NAMESPACE set image deployment/backend-green \
+          backend=$IMAGE
+
+    # ⏳ Wait until GREEN is healthy
+    - name: Wait for GREEN readiness
+      run: |
+        kubectl -n $NAMESPACE rollout status deployment/backend-green \
+          --timeout=120s
+
+    # 🔀 Switch traffic BLUE → GREEN
+    - name: Switch traffic to GREEN
+      run: |
+        kubectl -n $NAMESPACE patch svc backend \
+          -p '{"spec":{"selector":{"app":"backend","version":"green"}}}'
+
+    # 🧯 Rollback automatically if something fails
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "Rolling back traffic to BLUE"
+        kubectl -n $NAMESPACE patch svc backend \
+          -p '{"spec":{"selector":{"app":"backend","version":"blue"}}}'

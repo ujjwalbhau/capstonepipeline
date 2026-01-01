@@ -1,0 +1,61 @@
+name: Frontend Blue-Green Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: "${{ secrets.ACR_LOGIN_SERVER }}"
+  IMAGE_NAME: frontend
+  NAMESPACE: capstone-project
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Login to Azure Container Registry
+      run: |
+        echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
+          -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
+    - name: Build and Push Frontend Image
+      run: |
+        IMAGE_TAG=${GITHUB_SHA::7}
+        IMAGE="$REGISTRY/$IMAGE_NAME:main-$IMAGE_TAG"
+
+        docker build -t $IMAGE .
+        docker push $IMAGE
+
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    # 🚀 Inject image into GREEN deployment
+    - name: Deploy GREEN frontend
+      run: |
+        kubectl -n $NAMESPACE set image deployment/app-green \
+          frontend=$IMAGE
+
+    # ⏳ Wait until GREEN pods are healthy
+    - name: Wait for GREEN readiness
+      run: |
+        kubectl -n $NAMESPACE rollout status deployment/app-green \
+          --timeout=180s
+
+    # 🔀 Switch traffic BLUE → GREEN
+    - name: Switch frontend traffic to GREEN
+      run: |
+        kubectl -n $NAMESPACE patch svc frontend-lb \
+          -p '{"spec":{"selector":{"app":"app","version":"green"}}}'
+
+    # 🧯 Rollback if anything fails
+    - name: Rollback frontend traffic to BLUE
+      if: failure()
+      run: |
+        echo "Rolling back frontend traffic to BLUE"
+        kubectl -n $NAMESPACE patch svc frontend-lb \
+          -p '{"spec":{"selector":{"app":"app","version":"blue"}}}'
