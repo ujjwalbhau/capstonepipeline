@@ -5,6 +5,9 @@ on:
     branches:
       - main
   workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write    
 
 env:
   REGISTRY: "${{ secrets.ACR_LOGIN_SERVER }}"
