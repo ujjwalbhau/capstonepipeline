@@ -31,7 +31,9 @@ jobs:
       run: |
         az acr login --name ${{ secrets.ACR_NAME }}    
 
-
+    - name: get aks cred 
+      run: |
+        az aks get-credentials --resource-group capstone-rg --name ${{ secrets.AKS_CLUSTER_NAME }}   --overwrite-existing
         
 
     - name: Build & Push Docker Image
