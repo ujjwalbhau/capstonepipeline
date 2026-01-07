@@ -3,7 +3,8 @@ name: Backend CI/CD
 on:
   push:
     branches:
-      - dev
+      - main
+      - dev1
       
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}

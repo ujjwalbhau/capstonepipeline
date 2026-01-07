@@ -5,4 +5,4 @@ metadata:
   namespace: capstone-project
 type: Opaque
 stringData:
-  db_conn: "mysql://user:pass@mysql-host:3306/dbname"
+  db_conn: "mysql://appuser:password123@mysql-host:3306/appdb"
