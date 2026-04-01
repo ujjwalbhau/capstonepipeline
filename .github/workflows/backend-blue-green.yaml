@@ -10,7 +10,7 @@ permissions:
   id-token: write
   contents: read
 env:
-  REGISTRY: capstonear123.azurecr.io
+  REGISTRY: capstoneacr123.azurecr.io
   IMAGE_NAME: backend
   NAMESPACE: capstone-project
 
@@ -39,7 +39,7 @@ jobs:
     - name: Build & Push Docker Image
       run: |
         IMAGE_TAG=${GITHUB_SHA::7}
-        IMAGE="ujjwal8087.azurecr.io/backend:main-$IMAGE_TAG"
+        IMAGE="capstoneacr123.azurecr.io/backend:main-$IMAGE_TAG"
 
         docker build -f ./backend/Dockerfile -t $IMAGE backend
         docker push $IMAGE
