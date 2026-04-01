@@ -10,7 +10,7 @@ permissions:
   id-token: write
   contents: read
 env:
-  REGISTRY: ujjwal8087.azurecr.io
+  REGISTRY: capstonear123.azurecr.io
   IMAGE_NAME: backend
   NAMESPACE: capstone-project
 
@@ -33,7 +33,7 @@ jobs:
 
     - name: get aks cred 
       run: |
-        az aks get-credentials --resource-group capstone-rg --name ${{ secrets.AKS_CLUSTER_NAME }}   --overwrite-existing
+        az aks get-credentials --resource-group fractal --name ${{ secrets.AKS_CLUSTER_NAME }}   --overwrite-existing
         
 
     - name: Build & Push Docker Image

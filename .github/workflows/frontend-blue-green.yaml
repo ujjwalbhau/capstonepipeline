@@ -28,7 +28,7 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: get aks cred 
       run: |
-        az aks get-credentials --resource-group capstone-rg --name ${{ secrets.AKS_CLUSTER_NAME }}   --overwrite-existing
+        az aks get-credentials --resource-group fractal --name ${{ secrets.AKS_CLUSTER_NAME }}   --overwrite-existing
     - name: ACR Login
       run: az acr login --name ${{ secrets.ACR_NAME }}
 
