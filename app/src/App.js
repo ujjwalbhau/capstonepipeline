@@ -57,8 +57,8 @@ export default function App() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [subs, setSubs] = useState([]);
 
-
-  const api = '/api';
+ const api = process.env.REACT_APP_BACKEND_URL || 'http://backend:3000';
+ // const api = '/api';
 
   useEffect(() => {
     fetch(`${api}/submissions`)
