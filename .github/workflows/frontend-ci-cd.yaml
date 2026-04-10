@@ -135,44 +135,4 @@ jobs:
           # keep image.txt so subsequent steps (rolling update) can read the resolved image
    #       rm -f k8s/frontend-deploy.tmp.yaml
 
-      - name: Roll frontend deployment to pick up new image
-        run: |
-          CURRENT=$(kubectl -n ${{ secrets.K8S_NAMESPACE }} get svc frontend-lb -o jsonpath='{.spec.selector.version}')
-          if [ "$CURRENT" = "blue" ]; then
-            NEXT="green"
-          else
-            NEXT="blue"
-          fi
-
-          echo "Deploying $NEXT"
-          echo "next=$NEXT" >> $GITHUB_OUTPUT
-
-           IMAGE="${{ needs.build-and-push.outputs.image }}"
-          if [ -f image.txt ]; then
-            IMAGE="$(cat image.txt)"
-            echo "Image loaded from artifact: $IMAGE"
-          fi
-          echo "Deploying image: $IMAGE"
-          if [ -z "$IMAGE" ]; then
-            echo "ERROR: IMAGE variable is empty!"
-            exit 1
-          fi
-
-
-
-          sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/app.yaml
-          kubectl apply -f /tmp/app.yaml
-          kubectl -n $K8S_NAMESPACE rollout status deployment/app-$NEXT --timeout=120s
-          kubectl -n $K8S_NAMESPACE patch svc frontend-lb \
-          -p "{\"spec\":{\"selector\":{\"app\":\"myapp\",\"version\":\"$NEXT\"}}}"
-          echo "Deployment failed — traffic never switched"
-          kubectl -n $K8S_NAMESPACE delete deployment app-$NEXT
-          kubectl -n $K8S_NAMESPACE patch svc frontend-lb \
-           -p "{\"spec\":{\"selector\":{\"app\":\"myapp\",\"version\":\"$CURRENT\"}}}"
-
-
-
-
-
-
      
