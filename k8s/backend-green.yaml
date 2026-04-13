@@ -20,3 +20,28 @@ spec:
           image: REPLACE_WITH_IMAGE
           ports:
             - containerPort: 3000
+          env:
+          - name: DB_HOST
+            value: "mysql"
+          - name: DB_PORT
+            value: "3306"
+          - name: DB_USER
+            value: "appuser"
+          - name: DB_PASSWORD
+            value: "password123"
+          - name: DB_NAME
+            value: "appdb"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10  
