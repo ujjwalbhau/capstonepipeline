@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-green
+  name: app-green
   namespace: capstone-project
 spec:
   replicas: 2
@@ -16,7 +16,7 @@ spec:
         version: green
     spec:
       containers:
-        - name: backend
+        - name: frontend
           image: REPLACE_WITH_IMAGE
           ports:
             - containerPort: 3000
