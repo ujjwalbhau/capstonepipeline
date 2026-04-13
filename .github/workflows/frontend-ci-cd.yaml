@@ -140,11 +140,11 @@ jobs:
           kubectl apply -f /tmp/frontend.yaml
 
           # wait for rollout
-          kubectl -n $NS rollout status deployment/frontend-$NEXT --timeout=120s
+          kubectl -n $NS rollout status deployment/app-$NEXT --timeout=120s
 
           if [ $? -ne 0 ]; then
             echo "❌ Deployment failed → keeping old version"
-            kubectl -n $NS delete deployment frontend-$NEXT
+            kubectl -n $NS delete deployment app-$NEXT
             exit 1
           fi
 
