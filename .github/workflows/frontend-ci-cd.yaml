@@ -114,25 +114,46 @@ jobs:
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/frontend-svc.yaml
 
-      - name: Deploy updated image
+      - name: Blue-Green Deployment
         run: |
-          # prefer job output, fall back to artifact
+          NS="capstone-project"
+
+          # detect current live version
+          CURRENT=$(kubectl -n $NS get svc frontend-lb -o jsonpath='{.spec.selector.version}')
+          echo "Current version: $CURRENT"
+
+          if [ "$CURRENT" = "blue" ]; then
+            NEXT="green"
+          else
+            NEXT="blue"
+          fi
+
+          echo "Deploying NEW version: $NEXT"
+
           IMAGE="${{ needs.build-and-push.outputs.image }}"
           if [ -f image.txt ]; then
             IMAGE="$(cat image.txt)"
-            echo "Image loaded from artifact: $IMAGE"
           fi
-          echo "Deploying image: $IMAGE"
-          if [ -z "$IMAGE" ]; then
-            echo "ERROR: IMAGE variable is empty!"
+
+          # deploy new version
+          sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/frontend.yaml
+          kubectl apply -f /tmp/frontend.yaml
+
+          # wait for rollout
+          kubectl -n $NS rollout status deployment/frontend-$NEXT --timeout=120s
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Deployment failed → keeping old version"
+            kubectl -n $NS delete deployment frontend-$NEXT
             exit 1
           fi
-          # create tmp manifest with image substituted
-          sed "s|REPLACE_WITH_IMAGE|${IMAGE}|g" k8s/frontend-deploy.yaml > k8s/frontend-deploy.tmp.yaml
-          echo "Generated manifest:"
-          cat k8s/frontend-deploy.tmp.yaml
-          kubectl apply -f k8s/frontend-deploy.tmp.yaml
-          # keep image.txt so subsequent steps (rolling update) can read the resolved image
-   #       rm -f k8s/frontend-deploy.tmp.yaml
+
+          echo "✅ Deployment successful → switching traffic"
+
+          # switch traffic
+          kubectl -n $NS patch svc frontend-lb \
+            -p "{\"spec\":{\"selector\":{\"app\":\"app\",\"version\":\"$NEXT\"}}}"
+
+          echo "🎉 Traffic switched to $NEXT"
 
      
