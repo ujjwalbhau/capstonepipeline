@@ -26,14 +26,14 @@ jobs:
         env:
           ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
         run: |
-          ACR_LOGIN_SERVER="${ ACR_LOGIN_SERVER }"
+          ACR_LOGIN_SERVER="${ACR_LOGIN_SERVER}"
           echo "ACR_LOGIN_SERVER: capstoneacr123.azurecr.io"
-          echo "ACR_LOGIN_SERVER: ${ ACR_LOGIN_SERVER }"
+          echo "ACR_LOGIN_SERVER: ${ACR_LOGIN_SERVER}"
           
           SHORT_SHA=$(echo "${{ github.run_number}}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
           TAG="${BRANCH}-${SHORT_SHA}"
-          IMAGE="capstoneacr123.azurecr.io/frontend:${TAG}"
+          IMAGE="${ACR_LOGIN_SERVER}/frontend:${TAG}"
           
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "image=${IMAGE}" >> $GITHUB_OUTPUT
