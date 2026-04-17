@@ -26,8 +26,9 @@ jobs:
         run: |
           ACR_LOGIN_SERVER="${{ secrets.ACR_LOGIN_SERVER }}"
           echo "ACR_LOGIN_SERVER: capstoneacr123.azurecr.io"
+          echo "ACR_LOGIN_SERVER: ${}"
           
-          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          SHORT_SHA=$(echo "${{ github.run_number}}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
           TAG="${BRANCH}-${SHORT_SHA}"
           IMAGE="capstoneacr123.azurecr.io/frontend:${TAG}"
@@ -118,7 +119,6 @@ jobs:
         run: |
           NS="capstone-project"
 
-          # detect current live version
           CURRENT=$(kubectl -n $NS get svc frontend-lb -o jsonpath='{.spec.selector.version}')
           echo "Current version: $CURRENT"
 
@@ -133,27 +133,22 @@ jobs:
           IMAGE="${{ needs.build-and-push.outputs.image }}"
           if [ -f image.txt ]; then
             IMAGE="$(cat image.txt)"
-          fi
-
-          # deploy new version
+        
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/frontend.yaml
           kubectl apply -f /tmp/frontend.yaml
-
-          # wait for rollout
           kubectl -n $NS rollout status deployment/app-$NEXT --timeout=120s
 
           if [ $? -ne 0 ]; then
-            echo "❌ Deployment failed → keeping old version"
+            echo " Deployment failed → keeping old version"
             kubectl -n $NS delete deployment app-$NEXT
             exit 1
           fi
 
-          echo "✅ Deployment successful → switching traffic"
+          echo "Deployment successful → switching traffic"
 
-          # switch traffic
           kubectl -n $NS patch svc frontend-lb \
             -p "{\"spec\":{\"selector\":{\"app\":\"app\",\"version\":\"$NEXT\"}}}"
 
-          echo "🎉 Traffic switched to $NEXT"
+          echo " Traffic switched to $NEXT"
 
      

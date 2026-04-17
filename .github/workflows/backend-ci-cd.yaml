@@ -33,7 +33,7 @@ jobs:
             exit 1
           fi
 
-          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          SHORT_SHA=$(echo "${{ github.run_number }}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
           TAG="${BRANCH}-${SHORT_SHA}"
           IMAGE="${ACR_LOGIN_SERVER}/backend:${TAG}"
@@ -126,7 +126,7 @@ jobs:
         run: |
           NS="capstone-project"
 
-          # detect current live version
+          
           CURRENT=$(kubectl -n $NS get svc backend -o jsonpath='{.spec.selector.version}')
           echo "Current version: $CURRENT"
 
@@ -143,23 +143,23 @@ jobs:
             IMAGE="$(cat image.txt)"
           fi
 
-          # deploy new version
+          
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/backend-$NEXT.yaml > /tmp/backend.yaml
           kubectl apply -f /tmp/backend.yaml
 
-          # wait for rollout
+          
           kubectl -n $NS rollout status deployment/backend-$NEXT --timeout=120s
 
           if [ $? -ne 0 ]; then
-            echo "❌ Deployment failed → keeping old version"
+            echo "Deployment failed → keeping old version"
             kubectl -n $NS delete deployment backend-$NEXT
             exit 1
           fi
 
-          echo "✅ Deployment successful → switching traffic"
+          echo "Deployment successful → switching traffic"
 
-          # switch traffic
+          
           kubectl -n $NS patch svc backend \
             -p "{\"spec\":{\"selector\":{\"app\":\"backend\",\"version\":\"$NEXT\"}}}"
 
-          echo "🎉 Traffic switched to $NEXT"
+          echo "Traffic switched to $NEXT"
