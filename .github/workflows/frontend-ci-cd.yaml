@@ -139,6 +139,7 @@ jobs:
           sed "s|REPLACE_WITH_IMAGE|$IMAGE|g" k8s/frontend-$NEXT.yaml > /tmp/frontend.yaml
           kubectl apply -f /tmp/frontend.yaml
           kubectl -n $NS rollout status deployment/app-$NEXT --timeout=120s
+          fi
 
           if [ $? -ne 0 ]; then
             echo " Deployment failed → keeping old version"
