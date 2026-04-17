@@ -26,7 +26,7 @@ jobs:
         run: |
           ACR_LOGIN_SERVER="${{ secrets.ACR_LOGIN_SERVER }}"
           echo "ACR_LOGIN_SERVER: capstoneacr123.azurecr.io"
-          echo "ACR_LOGIN_SERVER: ${}"
+          echo "ACR_LOGIN_SERVER: ${ ACR_LOGIN_SERVER }"
           
           SHORT_SHA=$(echo "${{ github.run_number}}" | cut -c1-7)
           BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
